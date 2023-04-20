@@ -110,6 +110,89 @@ int main(int argc, char** argv) {
   }
 
 
+/* Files can be opened using the fopen function and closed using the fclose function.
+use fgets (to read single line) 
+starts at file position 0 after opening
+fgets advances 
+calling fgets multiple itmes yields diff results (file pointer advances)
+
+use sscanf to read input from string
+you should use the format specifier %llx
+
+only read in lines M, L, S (which have one space in front)
+no space in front of I line, make sure to ignore
+*/
+
+
+/* HELPER FUNCTION 1 */
+/* read in the line and store the bits */ 
+ fp = fopen("t2.trace", "r");
+char  line[50]; 
+
+//if line read sucessfully, pionter to buffer (line)
+//if end of file, fgets is null
+while (fgets(line, 50, fp)) {
+line = line + 1;
+char* op = line;
+if (*op == ' ') {
+	continue; //ignore because it is an "I" line
+} else {
+line = line + 2; 
+typedef unsigned long long memaddr_t; 
+memmaddr_t addr  = *line; 
+line = line + 2; 
+int size = line; 
+
+
+//now we need to set the bits
+//use the addr, s and b to do this
+
+
+/* HELPER 2 */
+/* need to malloc space for the cache set arrays and
+need to mallco space for the cache */
+
+//make a strcut for your cache line
+//cache setes are arrays of cahce lines
+//caches are 2d arrays (cache sets of cache lines)  
+//create array sizes based on the s, e b values passed in by user
+
+
+//QUESTION: number of tag bits depends on SEB so what type do we make it?  
+struct cacheLine {
+        memaddr_t tag;
+        int v;
+
+
+/* HELPER 3 */
+//based on calculated tag, and s bits, go into the cache 
+//at s index, go through the lines in the set array and try to match tag
+//if none match: miss ++ AND create cache line (HELPER 4)
+
+//if match: hit ++; 
+
+
+/* HELPER 4 */
+//create a cacheline type and assign v and tag value based on calculated
+//add this to the cache set array if there is space
+
+//if there is no space, evict ++ 
+//figure out how to evict the LEAST RECENT USED
+//add it
+
+//put the cache set in teh correct spot in the cache array 
+}
+
+
+//WAIT SHIT U DIDN'T THINK ABOUT THE  L, S, M STUFF SIGH 
+//HOW DO THINGS CHANGE ACCORDINGLY 
+}
+
+
+
+}
+
+
   /**********************************************************************
    * TODO: Add code to run the cache simulation here. Make sure to modularize
    * using helper functions; don't write the rest of the program inside main!

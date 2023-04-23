@@ -156,7 +156,7 @@ printf("%d", *data);
 }
 
 
-/* HELPER  
+/* HELPER */  
 /* need to malloc space for the cache set arrays and
 need to mallco space for the cache */
 
@@ -175,29 +175,15 @@ struct cacheLine {
 
 struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
 struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S; 
-
-
-
-
-
-
-/*
-line = line + 1;
-char* op = line;
-if (*op == ' ') {
-	continue; //ignore because it is an "I" line
-} else {
-line = line + 2; 
-typedef unsigned long long memaddr_t; 
-memmaddr_t addr  = *line; 
-line = line + 2; 
-int size = line; 
-
 */
+
+
+
+
+
 
 //now we need to set the bits
 //use the addr, s and b to do this
-
 
 
 

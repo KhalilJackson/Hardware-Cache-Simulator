@@ -1,7 +1,7 @@
 /*
  * Lab 5 - Make Some Cache
  *
- * <PUT YOUR NAME(S) HERE>
+ * <Khalil Jackson, Diyaa Yaqub>
  *
  * cachesim.c - source file for your hardware cache simulator.
  */
@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <getopt.h>
 #include <math.h>
+
+/*  maintains LRU */ 
+int lruCounter = 0; 
+
 
 /* Globals set by command line arguments */
 int verbose = 0; /* whether to print verbose output */
@@ -126,12 +130,53 @@ no space in front of I line, make sure to ignore
 
 /* HELPER FUNCTION 1 */
 /* read in the line and store the bits */ 
- fp = fopen("t2.trace", "r");
-char  line[50]; 
+fp = fopen("t2.trace", "r");
+char  line[100]; 
 
 //if line read sucessfully, pionter to buffer (line)
 //if end of file, fgets is null
-while (fgets(line, 50, fp)) {
+
+typedef unsigned long long memaddr_t; 
+
+while (fgets(line, 100, fp)) {
+if  (line[0] =  ' ') {
+	sscanf(line," char %llx, int", char* space, char* op, memaddr_t* addr, int* data);
+printf(*op);
+printf(*addr);
+printf*data); 
+}
+//assign offset/index/tag  bits
+memaddr_t offset = *addr  << (64-b) >> (64+b); 
+memaddr_t  index = *addr & (1 << (s+b)) >> b;
+memaddr_t tag = index >> s; 
+}
+
+
+/* HELPER  */
+/* need to malloc space for the cache set arrays and
+need to mallco space for the cache */
+
+//make a strcut for your cache line
+//cache setes are arrays of cahce lines
+//caches are 2d arrays (cache sets of cache lines)  
+//create array sizes based on the s, e b values passed in by user
+
+//QUESTION: number of tag bits depends on SEB so what type do we make it?  
+struct cacheLine {
+        memaddr_t tag;
+        int v;
+	int accessed; 
+}
+
+struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
+struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S; 
+ 
+
+
+
+
+
+/*
 line = line + 1;
 char* op = line;
 if (*op == ' ') {
@@ -143,25 +188,14 @@ memmaddr_t addr  = *line;
 line = line + 2; 
 int size = line; 
 
+*/
 
 //now we need to set the bits
 //use the addr, s and b to do this
 
 
-/* HELPER 2 */
-/* need to malloc space for the cache set arrays and
-need to mallco space for the cache */
-
-//make a strcut for your cache line
-//cache setes are arrays of cahce lines
-//caches are 2d arrays (cache sets of cache lines)  
-//create array sizes based on the s, e b values passed in by user
 
 
-//QUESTION: number of tag bits depends on SEB so what type do we make it?  
-struct cacheLine {
-        memaddr_t tag;
-        int v;
 
 
 /* HELPER 3 */

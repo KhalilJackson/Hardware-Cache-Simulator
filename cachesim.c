@@ -130,7 +130,7 @@ no space in front of I line, make sure to ignore
 
 /* HELPER FUNCTION 1 */
 /* read in the line and store the bits */ 
-fp = fopen("t2.trace", "r");
+FILE* fp = fopen("t2.trace", "r");
 char  line[100]; 
 
 //if line read sucessfully, pionter to buffer (line)
@@ -138,21 +138,25 @@ char  line[100];
 
 typedef unsigned long long memaddr_t; 
 
+char* op; 
+memaddr_t* addr; 
+int* data; 
+
 while (fgets(line, 100, fp)) {
-if  (line[0] =  ' ') {
-	sscanf(line," char %llx, int", char* space, char* op, memaddr_t* addr, int* data);
-printf(*op);
-printf(*addr);
-printf*data); 
+if  (line[0] ==  ' ') {
+	sscanf(line, " %c  %llx, %d", op, addr, data);
+printf("%c", *op);
+printf("%lld", *addr);
+printf("%d", *data); 
 }
 //assign offset/index/tag  bits
-memaddr_t offset = *addr  << (64-b) >> (64+b); 
-memaddr_t  index = *addr & (1 << (s+b)) >> b;
-memaddr_t tag = index >> s; 
+//memaddr_t offset = *addr  << (64-b) >> (64+b); 
+//memaddr_t  index = *addr & (1 << (s+b)) >> b;
+//memaddr_t tag = index >> s; 
 }
 
 
-/* HELPER  */
+/* HELPER  
 /* need to malloc space for the cache set arrays and
 need to mallco space for the cache */
 
@@ -161,6 +165,7 @@ need to mallco space for the cache */
 //caches are 2d arrays (cache sets of cache lines)  
 //create array sizes based on the s, e b values passed in by user
 
+/* 
 //QUESTION: number of tag bits depends on SEB so what type do we make it?  
 struct cacheLine {
         memaddr_t tag;
@@ -170,7 +175,7 @@ struct cacheLine {
 
 struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
 struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S; 
- 
+
 
 
 
@@ -223,7 +228,7 @@ int size = line;
 }
 
 
-
+return 0; 
 }
 
 
@@ -234,7 +239,5 @@ int size = line;
 
 
   /* Output the final cache statistics */
-  printSummary(hit_count, miss_count, eviction_count);
-  return 0;
-}
-
+//  printSummary(hit_count, miss_count, eviction_count);
+ // return 0;

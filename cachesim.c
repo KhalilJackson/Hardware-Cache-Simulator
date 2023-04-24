@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         printUsage(argv);
         exit(1);
     }
-  }
+}
 
   /* Make sure that all required command line args were specified */
   if (s == 0 || E == 0 || b == 0 || trace_file == NULL) {
@@ -113,49 +113,105 @@ int main(int argc, char** argv) {
     printf("simulation starting and reading from %s\n", trace_file);
   }
 
-
-/* Files can be opened using the fopen function and closed using the fclose function.
-use fgets (to read single line) 
-starts at file position 0 after opening
-fgets advances 
-calling fgets multiple itmes yields diff results (file pointer advances)
-
-use sscanf to read input from string
-you should use the format specifier %llx
-
-only read in lines M, L, S (which have one space in front)
-no space in front of I line, make sure to ignore
-*/
-
-
 /* HELPER FUNCTION 1 */
 /* read in the line and store the bits */ 
-FILE* fp = fopen("t2.trace", "r");
-char  line[100]; 
+FILE* fp = fopen("traces/t2.trace", "r");
+char line[100]; 
 
 //if line read sucessfully, pionter to buffer (line)
 //if end of file, fgets is null
 
 typedef unsigned long long memaddr_t; 
 
-char* op; 
-memaddr_t* addr; 
-int* data; 
+char* op = 0;
+memaddr_t* addr = 0; 
+int* data = 0; 
 
 while (fgets(line, 100, fp)) {
 if  (line[0] ==  ' ') {
 	sscanf(line, " %c  %llx, %d", op, addr, data);
-printf("%c", *op);
-printf("%lld", *addr);
-printf("%d", *data); 
+//	printf("%c", *op);
+//	printf("%lld", *addr);
+	
+//
+	printf("%d", *data); 
 }
-//assign offset/index/tag  bits
-//memaddr_t offset = *addr  << (64-b) >> (64+b); 
-//memaddr_t  index = *addr & (1 << (s+b)) >> b;
-//memaddr_t tag = index >> s; 
 }
 
 
+/*
+
+//TODO: neeed to check if this works and parses
+assign offset/index/tag  bits
+memaddr_t offset = *addr  << (64-b) >> (64+b); 
+memaddr_t  index = *addr & (1 << (s+b)) >> b;
+memaddr_t tag = index >> s; 
+
+if (op == 'M') {
+	//if its a hit, increment hit count 2 
+	//if its a miss, increment miss count, hit count, evict count
+	//if its a miss you should also rewrite the contents tho
+
+
+bool hit = false; 
+//check if its a hit
+struct cacheLine* lines = cacheSet[index]; 
+for (in i = 0; i < E; i++) {
+        struct cacheLine Sline = lines[i]; 
+        //if valid bit = 0; 
+        if (Sline->v == 0 && Sline-> tag == tag) {
+		if (op == 'M') {
+//TODO
+		hit = true;
+		hit_count += 2;
+		} else {
+	
+		lruCounter++; 
+		sLine 0> accessed = lruCounter; 
+		hit_count +=1;
+		hit = true;  
+		}
+	} 
+}
+
+//check if it is a miss
+if (!hit) {
+	miss_count += 1; 
+bool toEvict = true; 
+struct cacheLine lru = lines[0];  
+//setting a line in the cache
+	for (in i = 0; i < E; i++) {
+		struct cacheLine Sline = lines[i]; 
+		if (Sline-> v == 0) { //there is space in set
+		if (op == M) {
+//TODO
+			hit_count +=1;
+		} else {
+			lru->v = 1; 
+			lru->tag  = tag; 
+			lruCounter++;                         
+			Sline0-> accessed = lruCounter;
+			toEvict = false;  
+		}
+		//finding lru 
+		if (Sline-> accessed < lru->accessed) {
+			lru = Sline; 
+		}
+	`}
+}
+
+//evict LRU by replacing metadata
+if (toEvict) {
+
+	evict_count += 1; 
+	lru->v = 1; 
+	lru->tag  = tag; 
+	lruCounter++;                         
+	Sline0-> accessed = lruCounter; 
+}	
+
+}
+*/
 /* HELPER */  
 /* need to malloc space for the cache set arrays and
 need to mallco space for the cache */
@@ -173,8 +229,21 @@ struct cacheLine {
 	int accessed; 
 }
 
-struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
+
+
 struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S; 
+for (int i = 0; i < S; i++) {
+	struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
+	for(int j = 0; j < E; j++) {
+        	struct cachLine* line; 
+        	line->v = 0; 
+        	cacheSet[j] = line; 
+	}
+	cache[i] = cacheSet;
+}
+
+
+	
 */
 
 
@@ -206,12 +275,9 @@ struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S;
 //add it
 
 //put the cache set in teh correct spot in the cache array 
-}
-
 
 //WAIT SHIT U DIDN'T THINK ABOUT THE  L, S, M STUFF SIGH 
 //HOW DO THINGS CHANGE ACCORDINGLY 
-}
 
 
 return 0; 

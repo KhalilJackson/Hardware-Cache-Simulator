@@ -152,7 +152,7 @@ struct cacheLine {
         memaddr_t tag;
         int v;
         int accessed; 
-} cacheLine; 
+}; //cacheLine; 
 
 
 struct cacheLine** cache = malloc(sizeof(struct cacheLine*) * S); 
@@ -167,26 +167,24 @@ for (int i = 0; i < S; i++) {
 }
 
 
-
 bool hit = false; 
-
 //check if its a hit
 struct cacheLine* lines = cache[index]; 
+
 for (int i = 0; i < E; i++) {
         struct cacheLine Sline = lines[i]; 
         //if valid bit = 0; 
         if (Sline.v == 0 && Sline.tag == tag) {
 		lruCounter++; 
-		Sline > accessed = lruCounter; 
+		Sline.accessed = lruCounter; 
 		if (op == 'M') {
 		hit_count += 2; 
 		} else {
 			hit_count +=1;
 		}
 		hit = true;  
-		}
-	} 
-}
+	}
+} 
 
 //check if it is a miss
 if (!hit) {
@@ -194,39 +192,38 @@ if (!hit) {
 bool toEvict = true; 
 struct cacheLine lru = lines[0];  
 //setting a line in the cache
-	for (in i = 0; i < E; i++) {
+	for (int i = 0; i < E; i++) {
 		struct cacheLine Sline = lines[i]; 
-		if (Sline->v == 0) { //there is space in set
-			lru->v = 1; 
-			lru->tag  = tag; 
+		if (Sline.v == 0) { //there is space in set
+			lru.v = 1; 
+			lru.tag  = tag; 
 			lruCounter++;                         
-			Sline0-> accessed = lruCounter;
+			Sline.accessed = lruCounter;
 			toEvict = false;
-			if (op == M) {
+			if (op == 'M') {
 				hit_count+=1;
-			}  
-		
+			}  		
 		//finding lru 
-		if (Sline-> accessed < lru->accessed) {
+		if (Sline.accessed < lru.accessed) {
 			lru = Sline; 
 		}
-	`}
+	}
 }
 
 //evict LRU by replacing metadata
 if (toEvict) {
-	evict_count += 1; 
-	if (op == M) {
+	eviction_count += 1; 
+	if (op == 'M') {
 		hit_count+=1; 
 	}
-	lru->v = 1; 
-	lru->tag  = tag; 
+	lru.v = 1; 
+	lru.tag  = tag; 
 	lruCounter++;                         
-	Sline0-> accessed = lruCounter; 
+	lru.accessed = lruCounter; 
 }	
 
 }
-*/
+
 /* HELPER */  
 /* need to malloc space for the cache set arrays and
 need to mallco space for the cache */

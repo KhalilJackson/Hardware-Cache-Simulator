@@ -83,7 +83,7 @@ void printUsage(char** argv) {
 
 void createCache() {
 	//creates cache data structure
-	struct cacheLine** cacheH = malloc(sizeof(struct cacheLine*) * S); 
+	cache = malloc(sizeof(struct cacheLine*) * S); 
 	for (int i = 0; i < S; i++) {
         	struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
        		for(int j = 0; j < E; j++) {
@@ -91,16 +91,26 @@ void createCache() {
                 	line.v = 0; 
                 	cacheSet[j] = line; 
         	}
-        cacheH[i] = cacheSet;
+       		cache[i] = cacheSet;
 	}
-	cache = cacheH;  
 }
 
+/*
+todo
+SO I rewrote the assigning stuff
+we are no longer getting seg fault
+need to check if the offset, mask, and index values are correct tho
+*/
+
 void setBits(memaddr_t addr) {
-        double x = 2;
-        memaddr_t result= pow(x, (double) s);
-        offset = addr % b;
-        index = (addr >> b) & result;
+       // double x = 2;
+	memaddr_t mask = (1 << b) - 1; 
+	offset = addr & mask; 
+        //memaddr_t result= pow(x, (double) s);
+       // offset = addr % b;
+	mask = (1 << s) - 1; 
+	index = (addr >> b) & mask;
+	//index = (addr >> b) & result;
         tag = (8000000000000000 >> (64 - (s + b))) & addr; 
 }
 
@@ -111,7 +121,7 @@ bool isHit() {
  
 	//loop through all lines in set
 	for (int i = 0; i < E; i++) {
-        	struct cacheLine Sline = lines[i]; 
+        	struct cacheLine Sline = lines[i-1]; //trying i-1 but i htink it should be i 
         	//if tag matches
         	if (Sline.v == 1 && Sline.tag == tag) {
                 	lruCounter++; 
@@ -209,8 +219,6 @@ int main(int argc, char** argv) {
     printf("simulation starting and reading from %s\n", trace_file);
   }
 
-
-
 memaddr_t addr = 0; 
 int data = 0; 
 
@@ -227,25 +235,25 @@ if  (line[0] ==  ' ') {
 	if (!isHit()) {
 		//if it is not a hit, it must be a miss
 		miss_count += 1;		
-
-		//if there is space in the set, metadata is changed
-		//if there is no space, lru is returned
+		
+		//if to evict returns false, metadata already set since there was space in set
+		//if need to evict, lru global variable is set 
 		if (toEvict()) {
 			//need to evict and change metadata
-		eviction_count += 1; 
-        	if (op == 'M') {
-                	hit_count+=1; 
-       		}
+			eviction_count += 1; 
+        		if (op == 'M') {
+                		hit_count+=1; 
+       			}
+			//TODO: instead of current hleper methods, maybe have a method that changes metadata
+			lru.v = 1; 
+        		lru.tag  = tag; 
+        		lruCounter++;                         
+        		lru.accessed = lruCounter; 
+		} 
+	}
+}
+}
 
-		//TODO: instead of current hleper methods, maybe have a method that changes metadata
-		lru.v = 1; 
-        	lru.tag  = tag; 
-        	lruCounter++;                         
-        	lru.accessed = lruCounter; 
-	} 
-}
-}
-}
 
 /*
 

@@ -14,9 +14,19 @@
 #include <math.h>
 #include <stdbool.h>
 
+
+/* cache global var */
+ typedef unsigned long long memaddr_t; 
+struct cacheLine {
+        memaddr_t tag;
+        int v;
+        int accessed; 
+};
+struct cacheLine** cache = NULL; 
+
+ 
 /*  maintains LRU */ 
 int lruCounter = 0; 
-
 
 /* Globals set by command line arguments */
 int verbose = 0; /* whether to print verbose output */
@@ -35,10 +45,10 @@ int hit_count = 0;
 int eviction_count = 0;
 
 /* Global tag, index and offset bits for a line */
-typedef unsigned long long memaddr_t; 
         memaddr_t offset;
         memaddr_t index;
         memaddr_t tag; 
+	char op; 
 /* 
  * Print the cache simulation statistics. The simulator must call
  * this function in order to be properly tested. Do not modify!
@@ -68,6 +78,88 @@ void printUsage(char** argv) {
   printf("  linux>  %s -s 8 -E 2 -b 4 -t traces/t1.trace -v\n", argv[0]);
   exit(0);
 }
+
+void createCache() {
+	//creates cache data structure
+	struct cacheLine** cacheH = malloc(sizeof(struct cacheLine*) * S); 
+	for (int i = 0; i < S; i++) {
+        	struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
+       		for(int j = 0; j < E; j++) {
+                	struct cacheLine line; 
+                	line.v = 0; 
+                	cacheSet[j] = line; 
+        	}
+        cacheH[i] = cacheSet;
+	}
+	cache = cacheH;  
+}
+
+void setBits(memaddr_t addr) {
+        double x = 2;
+        memaddr_t result= pow(x, (double) s);
+        offset = addr % b;
+        index = (addr >> b) & result;
+        tag = (8000000000000000 >> (64 - (s + b))) & addr; 
+}
+
+//check if this line a hit
+bool isHit() {
+	bool hit = false; 
+	struct cacheLine* lines = cache[index];
+ 
+	//loop through all lines in set
+	for (int i = 0; i < E; i++) {
+        	struct cacheLine Sline = lines[i]; 
+        	//if tag matches
+        	if (Sline.v == 1 && Sline.tag == tag) {
+                	lruCounter++; 
+                	Sline.accessed = lruCounter; 
+                	if (op == 'M') {
+                		hit_count += 2; 
+               		 } else {
+                        	hit_count +=1;
+                	}
+               		hit = true;  
+        	}
+	}
+return hit; 
+}
+
+
+//TODO NEED TO FIX THIS
+//WHERE ARE U GETTING THE VALUE LINES FROM.... 
+struct cacheLine toEvict() {
+
+bool toEvict = true; 
+struct cacheLine lru = lines[0];  
+
+//setting a line in the cache
+        for (int i = 0; i < E; i++) {
+                struct cacheLine Sline = lines[i]; 
+                if (Sline.v == 0) { //there is space in set
+                        lru.v = 1; 
+                        lru.tag  = tag; 
+                        lruCounter++;                         
+                        Sline.accessed = lruCounter;
+                        toEvict = false;
+                        if (op == 'M') {
+                                hit_count+=1;
+                        }               
+                }
+
+                //finding lru 
+                if (Sline.accessed < lru.accessed) {
+                        lru = Sline; 
+                }
+        }
+
+if (toEvict == false) {
+return NULL;
+} else {
+return lru; 
+}
+}
+
 
 /*
  * Reads command-line arguments, runs the cache simulation, and prints
@@ -121,21 +213,49 @@ int main(int argc, char** argv) {
 
 
 
-FILE* fp = fopen("traces/t2.trace", "r");
-char line[100]; 
-
-//if line read sucessfully, pionter to buffer (line)
-//if end of file, fgets is null
-
-typedef unsigned long long memaddr_t; 
-
-char op = 0;
 memaddr_t addr = 0; 
 int data = 0; 
 
-double x = 2;
-memaddr_t result= pow(x, (double) s);
- 
+
+FILE* fp = fopen("traces/t2.trace", "r");
+char line[100]; 
+
+createCache(); 
+
+while (fgets(line, 100, fp)) {
+if  (line[0] ==  ' ') {
+        sscanf(line, " %c  %llx, %d", &op, &addr, &data);
+	setBits(addr);
+	if (!isHit()) {
+		//if it is not a hit, it must be a miss
+		miss_count += 1;		
+
+		//if there is space in the set, metadata is changed
+		//if there is no space, lru is returned
+		struct cacheLine lru = toEvict(); 
+		if (lru != NULL) {
+
+			//need to evict and change metadata
+		eviction_count += 1; 
+        	if (op == 'M') {
+                	hit_count+=1; 
+       		}
+
+		//TODO: instead of current hleper methods, maybe have a method that changes metadata
+		lru.v = 1; 
+        	lru.tag  = tag; 
+        	lruCounter++;                         
+        	lru.accessed = lruCounter; 
+	} 
+}
+}
+}
+
+/*
+
+
+//ALL THE MESS BELOW
+
 while (fgets(line, 100, fp)) {
 if  (line[0] ==  ' ') {
 	sscanf(line, " %c  %llx, %d", &op, &addr, &data);
@@ -144,27 +264,6 @@ if  (line[0] ==  ' ') {
 	tag = (8000000000000000 >> (64 - (s + b))) & addr; 
 
 	}
-}
-
-
-//creates the cache data structure (put into helper lol)
-struct cacheLine {
-        memaddr_t tag;
-        int v;
-        int accessed; 
-}; //cacheLine; 
-
-
-struct cacheLine** cache = malloc(sizeof(struct cacheLine*) * S); 
-for (int i = 0; i < S; i++) {
-        struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
-        for(int j = 0; j < E; j++) {
-                struct cacheLine line; 
-                line.v = 0; 
-                cacheSet[j] = line; 
-        }
-        cache[i] = cacheSet;
-}
 
 
 bool hit = false; 
@@ -221,9 +320,10 @@ if (toEvict) {
 	lruCounter++;                         
 	lru.accessed = lruCounter; 
 }	
-
+}
 }
 
+*/
 /* HELPER */  
 /* need to malloc space for the cache set arrays and
 need to mallco space for the cache */

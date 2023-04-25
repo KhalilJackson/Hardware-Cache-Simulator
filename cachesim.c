@@ -27,6 +27,8 @@ struct cacheLine** cache = NULL;
  
 /*  maintains LRU */ 
 int lruCounter = 0; 
+struct cacheLine lru;  
+
 
 /* Globals set by command line arguments */
 int verbose = 0; /* whether to print verbose output */
@@ -128,10 +130,11 @@ return hit;
 
 //TODO NEED TO FIX THIS
 //WHERE ARE U GETTING THE VALUE LINES FROM.... 
-struct cacheLine toEvict() {
+bool toEvict() {
 
 bool toEvict = true; 
-struct cacheLine lru = lines[0];  
+struct cacheLine* lines = cache[index];
+lru = lines[0];  
 
 //setting a line in the cache
         for (int i = 0; i < E; i++) {
@@ -152,12 +155,7 @@ struct cacheLine lru = lines[0];
                         lru = Sline; 
                 }
         }
-
-if (toEvict == false) {
-return NULL;
-} else {
-return lru; 
-}
+return toEvict; 
 }
 
 
@@ -232,9 +230,7 @@ if  (line[0] ==  ' ') {
 
 		//if there is space in the set, metadata is changed
 		//if there is no space, lru is returned
-		struct cacheLine lru = toEvict(); 
-		if (lru != NULL) {
-
+		if (toEvict()) {
 			//need to evict and change metadata
 		eviction_count += 1; 
         	if (op == 'M') {

@@ -16,19 +16,24 @@
 
 
 /* cache global var */
- typedef unsigned long long memaddr_t; 
+typedef unsigned long long memaddr_t; 
 struct cacheLine {
         memaddr_t tag;
         int v;
         int accessed; 
 };
-struct cacheLine** cache = NULL; 
-
+struct cacheLine** cache;
  
+
 /*  maintains LRU */ 
 int lruCounter = 0; 
 struct cacheLine lru;  
 
+/* Global tag, index and offset bits for a line */
+        memaddr_t offset;
+        memaddr_t index;
+        memaddr_t tag; 
+        char op; 
 
 /* Globals set by command line arguments */
 int verbose = 0; /* whether to print verbose output */
@@ -46,12 +51,7 @@ int miss_count = 0;
 int hit_count = 0;
 int eviction_count = 0;
 
-/* Global tag, index and offset bits for a line */
-        memaddr_t offset;
-        memaddr_t index;
-        memaddr_t tag; 
-	char op; 
-/* 
+/*
  * Print the cache simulation statistics. The simulator must call
  * this function in order to be properly tested. Do not modify!
  */

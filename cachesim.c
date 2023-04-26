@@ -129,7 +129,7 @@ bool isHit() {
                         	hit_count +=1;
                 	}
                		hit = true; 
-			break;  
+			//break;  
         	}
 	}
 return hit; 
@@ -146,17 +146,14 @@ void setLine(int indexInSet) {
 }
 
 
-//TODO NEED TO FIX THIS
-//WHERE ARE U GETTING THE VALUE LINES FROM.... 
 bool toEvict() {
 
-bool toEvict = true; 
-struct cacheLine* lines = cache[index];
-lru = lines[0];  
+	bool toEvict = true; 
+	struct cacheLine* lines = cache[index];
+	lru = lines[0];  
 
 //setting a line in the cache
         for (int i = 0; i < E; i++) {
- //               struct cacheLine Sline = lines[i]; 
                 if (lines[i].v == 0) { //there is space in set
 			setLine(i);
 			toEvict = false;
@@ -172,7 +169,7 @@ lru = lines[0];
                 }
 
         }
-return toEvict; 
+	return toEvict; 
 }
 
 
@@ -248,7 +245,7 @@ if  (line[0] ==  ' ') {
 		//if to evict returns false, metadata already set since there was space in set
 		//if need to evict, lru global variable is set 
 		if (toEvict()) {
-			//need to evict and change metadata
+			//need to evict and change metadata			
 			eviction_count += 1; 
         		if (op == 'M') {
                 		hit_count+=1; 
@@ -259,8 +256,14 @@ if  (line[0] ==  ' ') {
 	}
 }
 
- printSummary(hit_count, miss_count, eviction_count);
-  return 0;
+printSummary(hit_count, miss_count, eviction_count);
+
+
+for (int i = 0; i < S; i++) {
+	free(cache[i]);
+}
+free(cache); 
+return 0; 
 }
 
 

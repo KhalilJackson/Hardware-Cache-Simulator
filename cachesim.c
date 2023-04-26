@@ -155,14 +155,15 @@ lru = lines[0];
 			toEvict = false;
                         if (op == 'M') {
                                 hit_count+=1;
-                        }               
+                        }
+			//finding lru 
+	                if (Sline.accessed < lru.accessed) {
+                        lru = Sline;
+                        lruLine = i;  
+			}
+			return toEvict; 	               
                 }
 
-                //finding lru 
-                if (Sline.accessed < lru.accessed) {
-                        lru = Sline;
-			lruLine = i;  
-                }
         }
 return toEvict; 
 }
@@ -251,12 +252,13 @@ if  (line[0] ==  ' ') {
 			cache[index][lruLine] = lru;  
 		} 
 	}
+	}
 }
 
  printSummary(hit_count, miss_count, eviction_count);
   return 0;
 }
-}
+
 
 
 /*

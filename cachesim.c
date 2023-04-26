@@ -28,6 +28,7 @@ struct cacheLine** cache;
 /*  maintains LRU */ 
 int lruCounter = 0; 
 struct cacheLine lru;  
+int lruLine = 0; 
 
 /* Global tag, index and offset bits for a line */
         memaddr_t offset;
@@ -89,18 +90,14 @@ void createCache() {
        		for(int j = 0; j < E; j++) {
                 	struct cacheLine line; 
                 	line.v = 0; 
-                	cacheSet[j] = line; 
+                	line.accessed = 0; 
+			line.tag = 0; 
+			cacheSet[j] = line; 
         	}
        		cache[i] = cacheSet;
 	}
 }
 
-/*
-todo
-SO I rewrote the assigning stuff
-we are no longer getting seg fault
-need to check if the offset, mask, and index values are correct tho
-*/
 
 void setBits(memaddr_t addr) {
        // double x = 2;
@@ -111,17 +108,17 @@ void setBits(memaddr_t addr) {
 	mask = (1 << s) - 1; 
 	index = (addr >> b) & mask;
 	//index = (addr >> b) & result;
-        tag = (8000000000000000 >> (64 - (s + b))) & addr; 
+	tag = addr  >> (s+b);
+//        tag = (8000000000000000 >> (64 - (s + b))) & addr; 
 }
 
 //check if this line a hit
 bool isHit() {
 	bool hit = false; 
 	struct cacheLine* lines = cache[index];
- 
 	//loop through all lines in set
 	for (int i = 0; i < E; i++) {
-        	struct cacheLine Sline = lines[i-1]; //trying i-1 but i htink it should be i 
+        	struct cacheLine Sline = lines[i]; 
         	//if tag matches
         	if (Sline.v == 1 && Sline.tag == tag) {
                 	lruCounter++; 
@@ -150,11 +147,12 @@ lru = lines[0];
         for (int i = 0; i < E; i++) {
                 struct cacheLine Sline = lines[i]; 
                 if (Sline.v == 0) { //there is space in set
-                        lru.v = 1; 
-                        lru.tag  = tag; 
+                        Sline.v = 1; 
+                        Sline.tag  = tag; 
                         lruCounter++;                         
                         Sline.accessed = lruCounter;
-                        toEvict = false;
+                        lines[i] = Sline; 
+			toEvict = false;
                         if (op == 'M') {
                                 hit_count+=1;
                         }               
@@ -162,7 +160,8 @@ lru = lines[0];
 
                 //finding lru 
                 if (Sline.accessed < lru.accessed) {
-                        lru = Sline; 
+                        lru = Sline;
+			lruLine = i;  
                 }
         }
 return toEvict; 
@@ -223,7 +222,7 @@ memaddr_t addr = 0;
 int data = 0; 
 
 
-FILE* fp = fopen("traces/t2.trace", "r");
+FILE* fp = fopen(trace_file, "r");
 char line[100]; 
 
 createCache(); 
@@ -248,9 +247,14 @@ if  (line[0] ==  ' ') {
 			lru.v = 1; 
         		lru.tag  = tag; 
         		lruCounter++;                         
-        		lru.accessed = lruCounter; 
+        		lru.accessed = lruCounter;
+			cache[index][lruLine] = lru;  
 		} 
 	}
+}
+
+ printSummary(hit_count, miss_count, eviction_count);
+  return 0;
 }
 }
 
@@ -396,8 +400,8 @@ for (int i = 0; i < S; i++) {
 //HOW DO THINGS CHANGE ACCORDINGLY 
 
 
-return 0; 
-}
+//return 0; 
+//}
 
 
   /**********************************************************************

@@ -118,20 +118,31 @@ bool isHit() {
 	struct cacheLine* lines = cache[index];
 	//loop through all lines in set
 	for (int i = 0; i < E; i++) {
-        	struct cacheLine Sline = lines[i]; 
+//        	struct cacheLine Sline = lines[i]; 
         	//if tag matches
-        	if (Sline.v == 1 && Sline.tag == tag) {
+        	if (lines[i].v == 1 && lines[i].tag == tag) {
                 	lruCounter++; 
-                	Sline.accessed = lruCounter; 
+                	lines[i].accessed = lruCounter; 
                 	if (op == 'M') {
                 		hit_count += 2; 
                		 } else {
                         	hit_count +=1;
                 	}
-               		hit = true;  
+               		hit = true; 
+			break;  
         	}
 	}
 return hit; 
+}
+
+
+
+void setLine(int indexInSet) {
+	struct cacheLine* lines = cache[index]; 
+	lines[indexInSet].v = 1; 
+	lines[indexInSet].tag = tag; 
+	lruCounter += 1; 
+	lines[indexInSet].accessed = lruCounter;
 }
 
 
@@ -145,28 +156,26 @@ lru = lines[0];
 
 //setting a line in the cache
         for (int i = 0; i < E; i++) {
-                struct cacheLine Sline = lines[i]; 
-                if (Sline.v == 0) { //there is space in set
-                        Sline.v = 1; 
-                        Sline.tag  = tag; 
-                        lruCounter++;                         
-                        Sline.accessed = lruCounter;
-                        lines[i] = Sline; 
+ //               struct cacheLine Sline = lines[i]; 
+                if (lines[i].v == 0) { //there is space in set
+			setLine(i);
 			toEvict = false;
                         if (op == 'M') {
                                 hit_count+=1;
                         }
 			//finding lru 
-	                if (Sline.accessed < lru.accessed) {
-                        lru = Sline;
+	                if (lines[i].accessed < lru.accessed) {
+                        lru = lines[i];
                         lruLine = i;  
 			}
-			return toEvict; 	               
+			break; 
                 }
 
         }
 return toEvict; 
 }
+
+
 
 
 /*
@@ -244,12 +253,7 @@ if  (line[0] ==  ' ') {
         		if (op == 'M') {
                 		hit_count+=1; 
        			}
-			//TODO: instead of current hleper methods, maybe have a method that changes metadata
-			lru.v = 1; 
-        		lru.tag  = tag; 
-        		lruCounter++;                         
-        		lru.accessed = lruCounter;
-			cache[index][lruLine] = lru;  
+			setLine(lruLine); 
 		} 
 	}
 	}

@@ -14,7 +14,6 @@
 #include <math.h>
 #include <stdbool.h>
 
-
 /* cache global var */
 typedef unsigned long long memaddr_t; 
 struct cacheLine {
@@ -84,7 +83,7 @@ void printUsage(char** argv) {
  * Creates cache data strucute 
  */
 void createCache() {
-cache = malloc(sizeof(struct cacheLine*) * S);
+  cache = malloc(sizeof(struct cacheLine*) * S);
   //initialies number of cacheSets in cache
   for (int i = 0; i < S; i++) {
     struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
@@ -118,14 +117,12 @@ void setBits(memaddr_t addr) {
 bool isHit() {
   bool hit = false;
   struct cacheLine* lines = cache[index];
-
   //loop through all lines in set
   for (int i = 0; i < E; i++) {
     //if tag matches and it valid bit is 1, it is a hit
     if (lines[i].v == 1 && lines[i].tag == tag) {
       lruCounter++;
       lines[i].accessed = lruCounter;
-
       if (op == 'M') {
         hit_count += 2;
       } else {
@@ -157,30 +154,28 @@ void setLine(int indexInSet) {
  * in the set. 
  */
 bool toEvict() {
-	bool toEvict = true; 
-	struct cacheLine* lines = cache[index];
-	
-	//arbitrarily assigns lru to cache line index 0 in cache set
-	lruLine = 0; 
-	for (int i = 0; i < E; i++) {
-		if (lines[i].v == 0) { 
-			//there is space in set
-			setLine(i);
-			toEvict = false;
-
-			if (op == 'M') {
-        			hit_count++;
-      			}
-			return toEvict;
-    		}
-		//finding lru 		
-		if (lines[i].v == 1) {
-			if (lines[i].accessed < lines[lruLine].accessed) {
-				lruLine = i;
-			}
-		}
-  	}
-	return toEvict; 
+  bool toEvict = true; 
+  struct cacheLine* lines = cache[index];
+  //arbitrarily assigns lru to cache line index 0 in cache set
+  lruLine = 0; 
+  for (int i = 0; i < E; i++) {
+    if (lines[i].v == 0) { 
+      //there is space in set
+      setLine(i);
+      toEvict = false;
+      if (op == 'M') {
+        hit_count++;
+      }
+      return toEvict;
+      }
+      //finding lru
+      if (lines[i].v == 1) {
+        if (lines[i].accessed < lines[lruLine].accessed) {
+          lruLine = i;
+        }
+      }
+   }
+  return toEvict; 
 }
 
 /* 

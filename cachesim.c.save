@@ -128,7 +128,7 @@ bool isHit() {
                         	hit_count +=1;
                 	}
                		hit = true; 
-			return hit; 
+			//break;  
         	}
 	}
 return hit; 
@@ -137,19 +137,20 @@ return hit;
 
 
 void setLine(int indexInSet) {
-	//struct cacheLine* lines = cache[index]; 
-	cache[index][indexInSet].v = 1; 
-	cache[index][indexInSet].tag = tag; 
+	struct cacheLine* lines = cache[index]; 
+	lines[indexInSet].v = 1; 
+	lines[indexInSet].tag = tag; 
 	lruCounter += 1; 
-	cache[index][indexInSet].accessed = lruCounter;
+	lines[indexInSet].accessed = lruCounter;
 }
 
 
 bool toEvict() {
+
 	bool toEvict = true; 
 	struct cacheLine* lines = cache[index];
 	lru = lines[0];  
-	lruLine = 0; 
+
         for (int i = 0; i < E; i++) {
                 if (lines[i].v == 0) { //there is space in set
 			setLine(i);
@@ -157,23 +158,22 @@ bool toEvict() {
                         if (op == 'M') {
                                 hit_count+=1;
                         }
-			return toEvict;
+
 			//finding lru 
-                }
-		
-		if (lines[i].v == 1) {
-		 if (lines[i].accessed < lru.accessed) {
+	                if (lines[i].accessed < lru.accessed) {
                         lru = lines[i];
                         lruLine = i;  
-                        }
-		}
+			}
+			break; 
+                }
 
         }
 	return toEvict; 
 }
 
+/*
 
-
+*/
 void freeAll() {
 	for (int i = 0; i < S; i++) {
         	free(cache[i]);

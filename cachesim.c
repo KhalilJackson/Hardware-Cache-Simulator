@@ -111,29 +111,34 @@ void setBits(memaddr_t addr) {
 	tag = addr  >> (s+b);
 }
 
-/* 
+/*
  * Loops through all lines in the cache set (based on index bits of address) and updates the accessed value
  * to mantain lru functionality if it is a hit. Returns true if it is a hit, and false if it is not a hit.   
  */
 bool isHit() {
-	bool hit = false; 
-	struct cacheLine* lines = cache[index];
-	//loop through all lines in set
+
+  bool hit = false;
+  struct cacheLine* lines = cache[index];
+
+  //loop through all lines in set
 	for (int i = 0; i < E; i++) {
-        	//if tag matches and it valid bit is 1, it is a hit
-        	if (lines[i].v == 1 && lines[i].tag == tag) {
-                	lruCounter++; 
-                	lines[i].accessed = lruCounter; 
-                	if (op == 'M') {
-                		hit_count += 2; 
-               		 } else {
-                        	hit_count ++;
-                	}
-               		hit = true; 
-			return hit; 
-        	}
+
+    //if tag matches and it valid bit is 1, it is a hit
+    if (lines[i].v == 1 && lines[i].tag == tag) {
+
+      lruCounter++;
+      lines[i].accessed = lruCounter;
+
+      if (op == 'M') {
+        hit_count += 2;
+      } else {
+        hit_count ++;
+      }
+      hit = true;
+      return hit;
+    }
 	}
-return hit; 
+  return hit;
 }
 
 /* 

@@ -24,17 +24,15 @@ struct cacheLine {
 };
 struct cacheLine** cache;
  
-
 /*  maintains LRU */ 
 int lruCounter = 0; 
-struct cacheLine lru;  
 int lruLine = 0; 
 
 /* Global tag, index and offset bits for a line */
-        memaddr_t offset;
-        memaddr_t index;
-        memaddr_t tag; 
-        char op; 
+memaddr_t offset;
+memaddr_t index;
+memaddr_t tag; 
+char op; 
 
 /* Globals set by command line arguments */
 int verbose = 0; /* whether to print verbose output */
@@ -82,50 +80,54 @@ void printUsage(char** argv) {
   exit(0);
 }
 
+/*
+ * Creates cache data strucute 
+ */
 void createCache() {
-	//creates cache data structure
-	cache = malloc(sizeof(struct cacheLine*) * S); 
-	for (int i = 0; i < S; i++) {
-        	struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
-       		for(int j = 0; j < E; j++) {
-                	struct cacheLine line; 
-                	line.v = 0; 
-                	line.accessed = 0; 
-			line.tag = 0; 
-			cacheSet[j] = line; 
-        	}
-       		cache[i] = cacheSet;
-	}
+  cache = malloc(sizeof(struct cacheLine*) * S);
+    //initialies number of cacheSets in cache
+    for (int i = 0; i < S; i++) {
+      struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
+      //initialies number of cache lines in cache set
+      for(int j = 0; j < E; j++) {
+         struct cacheLine line; 
+           line.v = 0;
+           line.accessed = 0; 
+           line.tag = 0; 
+           cacheSet[j] = line; 
+      }
+      cache[i] = cacheSet;
+    }
 }
 
-
+/* 
+ * Used to break the memory address up into offset, index, and tag bits and saves to global variables  
+ */ 
 void setBits(memaddr_t addr) {
-       // double x = 2;
 	memaddr_t mask = (1 << b) - 1; 
 	offset = addr & mask; 
-        //memaddr_t result= pow(x, (double) s);
-       // offset = addr % b;
 	mask = (1 << s) - 1; 
 	index = (addr >> b) & mask;
-	//index = (addr >> b) & result;
 	tag = addr  >> (s+b);
-//        tag = (8000000000000000 >> (64 - (s + b))) & addr; 
 }
 
-//check if this line a hit
+/* 
+ * Loops through all lines in the cache set (based on index bits of address) and updates the accessed value
+ * to mantain lru functionality if it is a hit. Returns true if it is a hit, and false if it is not a hit.   
+ */
 bool isHit() {
 	bool hit = false; 
 	struct cacheLine* lines = cache[index];
 	//loop through all lines in set
 	for (int i = 0; i < E; i++) {
-        	//if tag matches
+        	//if tag matches and it valid bit is 1, it is a hit
         	if (lines[i].v == 1 && lines[i].tag == tag) {
                 	lruCounter++; 
                 	lines[i].accessed = lruCounter; 
                 	if (op == 'M') {
                 		hit_count += 2; 
                		 } else {
-                        	hit_count +=1;
+                        	hit_count ++;
                 	}
                		hit = true; 
 			return hit; 
@@ -134,51 +136,92 @@ bool isHit() {
 return hit; 
 }
 
-
-
+/* 
+ * Updates the values of cache line in the cache cache set. It replaces the 
+ * accessed value, the tag value, and the valid bit. This happens when there is a miss. 
+ * The method takes in the index of the line in the set when multiple cache lines are in the set 
+ * so that the correct one is replaced. The index of lru element is passed in when there is an eviction.  
+ */
 void setLine(int indexInSet) {
-	//struct cacheLine* lines = cache[index]; 
 	cache[index][indexInSet].v = 1; 
 	cache[index][indexInSet].tag = tag; 
-	lruCounter += 1; 
+	lruCounter++; 
 	cache[index][indexInSet].accessed = lruCounter;
 }
 
-
+/*  Retuns true if there is no space in the cache set and a cache line needs to be evicted. Method returns
+ * false when there is space in the set. When there is sapce in the set, the cache line is updated. When 
+ * an eviction is needed, lru element is saved to the global variable and the index at which it existed
+ * in the set. 
+ */
 bool toEvict() {
 	bool toEvict = true; 
 	struct cacheLine* lines = cache[index];
-	lru = lines[0];  
+	
+	//arbitrarily assigns lru to cache line index 0 in cache set
 	lruLine = 0; 
-        for (int i = 0; i < E; i++) {
-                if (lines[i].v == 0) { //there is space in set
+        
+	for (int i = 0; i < E; i++) {
+                if (lines[i].v == 0) { 
+			//there is space in set
 			setLine(i);
 			toEvict = false;
                         if (op == 'M') {
-                                hit_count+=1;
+                                hit_count++;
                         }
 			return toEvict;
-			//finding lru 
                 }
-		
+		//finding lru 		
 		if (lines[i].v == 1) {
-		 if (lines[i].accessed < lru.accessed) {
-                        lru = lines[i];
+		 if (lines[i].accessed < lines[lruLine].accessed) {
                         lruLine = i;  
-                        }
+                       }
 		}
 
         }
 	return toEvict; 
 }
 
-
-
+/* 
+ * Frees up allocated memory. 
+ */ 
 void freeAll() {
 	for (int i = 0; i < S; i++) {
         	free(cache[i]);
 	}
 	free(cache); 
+}
+
+/* 
+ * Loops through each line in the file and mantains the miss, hit, and eviction count
+ * for each line (which cumulates to find the total). 
+ */
+void setCounts() {
+	memaddr_t addr = 0; 
+	FILE* fp = fopen(trace_file, "r");
+	char line[100]; 
+	createCache(); 
+
+	while (fgets(line, 100, fp)) {
+		if  (line[0] ==  ' ') {
+        		sscanf(line, " %c  %llx,", &op, &addr);
+        		setBits(addr);
+		//if it is not a hit, it is a miss
+		if (!isHit()) {
+			miss_count ++;                 
+			  
+        //if it is a miss, toEvict() determines if eviction required 
+        if (toEvict()) {
+        //need to evict and change metadata                     
+        eviction_count ++; 
+          if (op == 'M') {
+            hit_count++; 
+          }
+        setLine(lruLine);
+        } 
+    }
+  }
+  }
 }
 
 /*
@@ -231,196 +274,16 @@ int main(int argc, char** argv) {
     printf("simulation starting and reading from %s\n", trace_file);
   }
 
-memaddr_t addr = 0; 
-int data = 0; 
+  /* Loop through each line in the file and set cache statistics */
+  setCounts(); 
 
-
-FILE* fp = fopen(trace_file, "r");
-char line[100]; 
-
-createCache(); 
-
-while (fgets(line, 100, fp)) {
-if  (line[0] ==  ' ') {
-        sscanf(line, " %c  %llx, %d", &op, &addr, &data);
-	setBits(addr);
-	if (!isHit()) {
-		//if it is not a hit, it must be a miss
-		miss_count += 1;		
-		
-		//if to evict returns false, metadata already set since there was space in set
-		//if need to evict, lru global variable is set 
-		if (toEvict()) {
-			//need to evict and change metadata			
-			eviction_count += 1; 
-        		if (op == 'M') {
-                		hit_count+=1; 
-       			}
-			setLine(lruLine); 
-		} 
-	}
-}
-}
-printSummary(hit_count, miss_count, eviction_count);
-
-freeAll();
-
-return 0; 
+  /* output the  final cache statistics */
+  printSummary(hit_count, miss_count, eviction_count);
+  freeAll();
+  return 0; 
 }
 
 
 
-/*
 
 
-//ALL THE MESS BELOW
-
-while (fgets(line, 100, fp)) {
-if  (line[0] ==  ' ') {
-	sscanf(line, " %c  %llx, %d", &op, &addr, &data);
-	offset = addr % b;
-	index = (addr >> b) & result;
-	tag = (8000000000000000 >> (64 - (s + b))) & addr; 
-
-	}
-
-
-bool hit = false; 
-//check if its a hit
-struct cacheLine* lines = cache[index]; 
-
-for (int i = 0; i < E; i++) {
-        struct cacheLine Sline = lines[i]; 
-        //if valid bit = 0; 
-        if (Sline.v == 0 && Sline.tag == tag) {
-		lruCounter++; 
-		Sline.accessed = lruCounter; 
-		if (op == 'M') {
-		hit_count += 2; 
-		} else {
-			hit_count +=1;
-		}
-		hit = true;  
-	}
-} 
-
-//check if it is a miss
-if (!hit) {
-	miss_count += 1; 
-bool toEvict = true; 
-struct cacheLine lru = lines[0];  
-//setting a line in the cache
-	for (int i = 0; i < E; i++) {
-		struct cacheLine Sline = lines[i]; 
-		if (Sline.v == 0) { //there is space in set
-			lru.v = 1; 
-			lru.tag  = tag; 
-			lruCounter++;                         
-			Sline.accessed = lruCounter;
-			toEvict = false;
-			if (op == 'M') {
-				hit_count+=1;
-			}  		
-		//finding lru 
-		if (Sline.accessed < lru.accessed) {
-			lru = Sline; 
-		}
-	}
-}
-
-//evict LRU by replacing metadata
-if (toEvict) {
-	eviction_count += 1; 
-	if (op == 'M') {
-		hit_count+=1; 
-	}
-	lru.v = 1; 
-	lru.tag  = tag; 
-	lruCounter++;                         
-	lru.accessed = lruCounter; 
-}	
-}
-}
-
-*/
-/* HELPER */  
-/* need to malloc space for the cache set arrays and
-need to mallco space for the cache */
-
-//make a strcut for your cache line
-//cache setes are arrays of cahce lines
-//caches are 2d arrays (cache sets of cache lines)  
-//create array sizes based on the s, e b values passed in by user
-
-/* 
-//QUESTION: number of tag bits depends on SEB so what type do we make it?  
-struct cacheLine {
-        memaddr_t tag;
-        int v;
-	int accessed; 
-}
-
-
-
-struct cacheLine** cache = malloc(sizeof(struct cacheLine*)) * S; 
-for (int i = 0; i < S; i++) {
-	struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine)) * E; 
-	for(int j = 0; j < E; j++) {
-        	struct cachLine* line; 
-        	line->v = 0; 
-        	cacheSet[j] = line; 
-	}
-	cache[i] = cacheSet;
-}
-
-
-	
-*/
-
-
-
-
-
-
-//now we need to set the bits
-//use the addr, s and b to do this
-
-
-
-
-
-/* HELPER 3 */
-//based on calculated tag, and s bits, go into the cache 
-//at s index, go through the lines in the set array and try to match tag
-//if none match: miss ++ AND create cache line (HELPER 4)
-
-//if match: hit ++; 
-
-
-/* HELPER 4 */
-//create a cacheline type and assign v and tag value based on calculated
-//add this to the cache set array if there is space
-
-//if there is no space, evict ++ 
-//figure out how to evict the LEAST RECENT USED
-//add it
-
-//put the cache set in teh correct spot in the cache array 
-
-//WAIT SHIT U DIDN'T THINK ABOUT THE  L, S, M STUFF SIGH 
-//HOW DO THINGS CHANGE ACCORDINGLY 
-
-
-//return 0; 
-//}
-
-
-  /**********************************************************************
-   * TODO: Add code to run the cache simulation here. Make sure to modularize
-   * using helper functions; don't write the rest of the program inside main!
-   **********************************************************************/
-
-
-  /* Output the final cache statistics */
-//  printSummary(hit_count, miss_count, eviction_count);
- // return 0;

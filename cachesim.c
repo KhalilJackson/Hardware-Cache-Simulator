@@ -86,18 +86,18 @@ void printUsage(char** argv) {
 void createCache() {
   cache = malloc(sizeof(struct cacheLine*) * S);
     //initialies number of cacheSets in cache
-    for (int i = 0; i < S; i++) {
-      struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
-      //initialies number of cache lines in cache set
-      for(int j = 0; j < E; j++) {
-         struct cacheLine line; 
-           line.v = 0;
-           line.accessed = 0; 
-           line.tag = 0; 
-           cacheSet[j] = line; 
-      }
-      cache[i] = cacheSet;
+  for (int i = 0; i < S; i++) {
+    struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
+    //initialies number of cache lines in cache set
+    for(int j = 0; j < E; j++) {
+      struct cacheLine line; 
+      line.v = 0;
+      line.accessed = 0; 
+      line.tag = 0; 
+      cacheSet[j] = line; 
     }
+  cache[i] = cacheSet;
+  }
 }
 
 /* 
@@ -162,23 +162,22 @@ bool toEvict() {
 	lruLine = 0; 
         
 	for (int i = 0; i < E; i++) {
-                if (lines[i].v == 0) { 
+    if (lines[i].v == 0) { 
 			//there is space in set
 			setLine(i);
 			toEvict = false;
-                        if (op == 'M') {
-                                hit_count++;
-                        }
+      if (op == 'M') {
+        hit_count++;
+      }
 			return toEvict;
-                }
-		//finding lru 		
+    }
+    //finding lru 		
 		if (lines[i].v == 1) {
-		 if (lines[i].accessed < lines[lruLine].accessed) {
-                        lruLine = i;  
-                       }
+      if (lines[i].accessed < lines[lruLine].accessed) {
+        lruLine = i;
+      }
 		}
-
-        }
+  }
 	return toEvict; 
 }
 
@@ -204,23 +203,22 @@ void setCounts() {
 
 	while (fgets(line, 100, fp)) {
 		if  (line[0] ==  ' ') {
-        		sscanf(line, " %c  %llx,", &op, &addr);
-        		setBits(addr);
+      sscanf(line, " %c  %llx,", &op, &addr);
+      setBits(addr);
 		//if it is not a hit, it is a miss
 		if (!isHit()) {
-			miss_count ++;                 
-			  
-        //if it is a miss, toEvict() determines if eviction required 
-        if (toEvict()) {
-        //need to evict and change metadata                     
+			miss_count ++;
+      //if it is a miss, toEvict() determines if eviction required 
+      if (toEvict()) {
+      //need to evict and change metadata                     
         eviction_count ++; 
-          if (op == 'M') {
-            hit_count++; 
-          }
+        if (op == 'M') {
+          hit_count++; 
+        }
         setLine(lruLine);
         } 
+      }
     }
-  }
   }
 }
 
@@ -256,7 +254,7 @@ int main(int argc, char** argv) {
         printUsage(argv);
         exit(1);
     }
-}
+  }
 
   /* Make sure that all required command line args were specified */
   if (s == 0 || E == 0 || b == 0 || trace_file == NULL) {

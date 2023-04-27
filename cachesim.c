@@ -18,9 +18,9 @@
 /* cache global var */
 typedef unsigned long long memaddr_t; 
 struct cacheLine {
-        memaddr_t tag;
-        int v;
-        int accessed; 
+  memaddr_t tag;
+  int v;
+  int accessed; 
 };
 struct cacheLine** cache;
  
@@ -84,8 +84,8 @@ void printUsage(char** argv) {
  * Creates cache data strucute 
  */
 void createCache() {
-  cache = malloc(sizeof(struct cacheLine*) * S);
-    //initialies number of cacheSets in cache
+cache = malloc(sizeof(struct cacheLine*) * S);
+  //initialies number of cacheSets in cache
   for (int i = 0; i < S; i++) {
     struct cacheLine* cacheSet = malloc(sizeof(struct cacheLine) * E); 
     //initialies number of cache lines in cache set
@@ -104,11 +104,11 @@ void createCache() {
  * Used to break the memory address up into offset, index, and tag bits and saves to global variables  
  */ 
 void setBits(memaddr_t addr) {
-	memaddr_t mask = (1 << b) - 1; 
-	offset = addr & mask; 
-	mask = (1 << s) - 1; 
-	index = (addr >> b) & mask;
-	tag = addr  >> (s+b);
+  memaddr_t mask = (1 << b) - 1; 
+  offset = addr & mask; 
+  mask = (1 << s) - 1; 
+  index = (addr >> b) & mask;
+  tag = addr  >> (s+b);
 }
 
 /*
@@ -116,16 +116,13 @@ void setBits(memaddr_t addr) {
  * to mantain lru functionality if it is a hit. Returns true if it is a hit, and false if it is not a hit.   
  */
 bool isHit() {
-
   bool hit = false;
   struct cacheLine* lines = cache[index];
 
   //loop through all lines in set
-	for (int i = 0; i < E; i++) {
-
+  for (int i = 0; i < E; i++) {
     //if tag matches and it valid bit is 1, it is a hit
     if (lines[i].v == 1 && lines[i].tag == tag) {
-
       lruCounter++;
       lines[i].accessed = lruCounter;
 
@@ -136,8 +133,8 @@ bool isHit() {
       }
       hit = true;
       return hit;
-    }
-	}
+     }
+   }
   return hit;
 }
 
@@ -148,10 +145,10 @@ bool isHit() {
  * so that the correct one is replaced. The index of lru element is passed in when there is an eviction.  
  */
 void setLine(int indexInSet) {
-	cache[index][indexInSet].v = 1; 
-	cache[index][indexInSet].tag = tag; 
-	lruCounter++; 
-	cache[index][indexInSet].accessed = lruCounter;
+  cache[index][indexInSet].v = 1; 
+  cache[index][indexInSet].tag = tag; 
+  lruCounter++; 
+  cache[index][indexInSet].accessed = lruCounter;
 }
 
 /*  Retuns true if there is no space in the cache set and a cache line needs to be evicted. Method returns
@@ -165,24 +162,24 @@ bool toEvict() {
 	
 	//arbitrarily assigns lru to cache line index 0 in cache set
 	lruLine = 0; 
-        
 	for (int i = 0; i < E; i++) {
-    if (lines[i].v == 0) { 
+		if (lines[i].v == 0) { 
 			//there is space in set
 			setLine(i);
 			toEvict = false;
-      if (op == 'M') {
-        hit_count++;
-      }
+
+			if (op == 'M') {
+        			hit_count++;
+      			}
 			return toEvict;
-    }
-    //finding lru 		
+    		}
+		//finding lru 		
 		if (lines[i].v == 1) {
-      if (lines[i].accessed < lines[lruLine].accessed) {
-        lruLine = i;
-      }
+			if (lines[i].accessed < lines[lruLine].accessed) {
+				lruLine = i;
+			}
 		}
-  }
+  	}
 	return toEvict; 
 }
 
@@ -190,10 +187,10 @@ bool toEvict() {
  * Frees up allocated memory. 
  */ 
 void freeAll() {
-	for (int i = 0; i < S; i++) {
-        	free(cache[i]);
-	}
-	free(cache); 
+  for (int i = 0; i < S; i++) {
+    free(cache[i]);
+  }
+  free(cache); 
 }
 
 /* 
@@ -201,26 +198,26 @@ void freeAll() {
  * for each line (which cumulates to find the total). 
  */
 void setCounts() {
-	memaddr_t addr = 0; 
-	FILE* fp = fopen(trace_file, "r");
-	char line[100]; 
-	createCache(); 
-
-	while (fgets(line, 100, fp)) {
-		if  (line[0] ==  ' ') {
-      sscanf(line, " %c  %llx,", &op, &addr);
-      setBits(addr);
-		//if it is not a hit, it is a miss
-		if (!isHit()) {
-			miss_count ++;
-      //if it is a miss, toEvict() determines if eviction required 
-      if (toEvict()) {
-      //need to evict and change metadata                     
-        eviction_count ++; 
-        if (op == 'M') {
-          hit_count++; 
-        }
-        setLine(lruLine);
+  memaddr_t addr = 0; 
+  FILE* fp = fopen(trace_file, "r");
+  char line[100]; 
+  createCache(); 
+  
+  while (fgets(line, 100, fp)) {
+      if  (line[0] ==  ' ') {
+        sscanf(line, " %c  %llx,", &op, &addr);
+        setBits(addr);
+        //if it is not a hit, it is a miss
+        if (!isHit()) {
+          miss_count ++;
+          //if it is a miss, toEvict() determines if eviction required 
+          if (toEvict()) {
+          //need to evict and change metadata                     
+          eviction_count ++; 
+            if (op == 'M') {
+              hit_count++; 
+            }
+           setLine(lruLine);
         } 
       }
     }

@@ -253,13 +253,13 @@ int main(int argc, char** argv) {
       case 't':
         trace_file = optarg;
         break;
-      case 'v': // turn on verbose output
+      case 'v': //turn on verbose output
         verbose = 1;
         break;
-      case 'h': // print the program help message
+      case 'h': //print the program help message
         printUsage(argv);
         exit(0);
-      default: // unrecognized option; print the help message
+      default: //unrecognized option; print the help message
         printUsage(argv);
         exit(1);
     }
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
   //loop through each line in the file and set cache statistics
   setCounts();
 
-  //output the  final cache statistics
+  //output the final cache statistics
   printSummary(hit_count, miss_count, eviction_count);
   freeAll();
   return 0;

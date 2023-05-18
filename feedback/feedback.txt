@@ -1,0 +1,10 @@
+Lab 5 - Make Some Cache
+Khalil & Diyaa
+
+Test script points: 27/27
+
+-Use return values rather than global variables to save the results of function calls (eg setBits)
+
+-Use #define constants for hardcoded values (eg 100)
+
+Score: 95/100
